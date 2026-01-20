@@ -179,37 +179,20 @@ body.dark .actions button:hover i{
   border-radius:10px;
   cursor:pointer;
   font-weight:bold;
-  color:#fff;
+  color:#fff; /* Light mode default text */
   display:inline-flex;
   align-items:center;
   gap:6px;
 
-  /* ☀️ Day (Light mode) gradient */
   background:linear-gradient(135deg, #1e3a8a, #020617);
-
   transition:all .2s ease;
 }
 
-/* 🌙 Night (Dark mode) gradient */
+/* Dark mode gradient */
 body.dark .dark-btn{
   background:linear-gradient(135deg, #fbbf24, #f97316);
+  /* text color handled by JS → no need to change here */
 }
-
-/* icon spacing */
-.dark-btn i{
-  margin-right:6px;
-}
-
-/* press effect */
-.dark-btn:active{
-  transform:translateY(2px);
-  box-shadow:0 3px 0 rgba(0,0,0,.3);
-}
-
-
-
-
-
 
 
 /* ===== Mobile ===== */
@@ -259,8 +242,9 @@ body.dark .dark-btn{
 
 <h2>🛒 বাজার লিস্ট</h2>
 
-<button onclick="toggleDark()" class="dark-btn">
-  <i id="themeIcon" class="fa-solid fa-moon"></i> Dark Mode
+<button class="dark-btn" id="darkModeBtn">
+  <i class="fa-solid fa-moon"></i>
+  <span class="btn-text">Dark Mood</span>
 </button>
 
 <!-- Add Item -->
@@ -300,13 +284,135 @@ body.dark .dark-btn{
 
 </div>
 
+
+
+<!-- Custom Fancy Alert -->
+<div id="custom-alert" style="
+  display:none;
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#e53935;      /* Alert background color */
+  color:white;             /* Text color */
+  padding:10px 20px;
+  border-radius:5px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.3);
+  font-family:sans-serif;
+  z-index:1000;
+  font-size:16px;
+">
+  এখানে নাম দিন!
+</div>
+
+<!-- Custom Fancy confirmation -->
+<div id="custom-confirm" style="
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  background:white;      /* light mode background */
+  border-radius:10px;
+  padding:20px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  z-index:1000;
+  font-family:sans-serif;
+  color:black;           /* default text color */
+">
+  <p id="confirm-msg" style="margin-bottom:20px;">সব মুছবেন?</p>
+  <button id="confirm-ok" style="background:#e53935;color:white;padding:5px 15px;border:none;border-radius:5px;margin-right:10px;">হ্যাঁ</button>
+  <button id="confirm-cancel" style="padding:5px 15px;border:none;border-radius:5px;">না</button>
+</div>
+
+
+
+
+
+
 <script>
 let items = JSON.parse(localStorage.getItem("bazar_v8")) || [];
 let dark = localStorage.getItem("dark_v8")==="true";
 if(dark) document.body.classList.add("dark");
 
+
+
+const darkBtn = document.getElementById("darkModeBtn");
+
+darkBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark"); // dark mode toggle
+
+  const textSpan = darkBtn.querySelector(".btn-text");
+
+  if(document.body.classList.contains("dark")) {
+    textSpan.textContent = "Day Mood"; // Dark mode ON → show "Day Mood"
+  } else {
+    textSpan.textContent = "Dark Mood"; // Light mode → show "Dark Mood"
+  }
+});
+
+
+
+
+
+
+
+//কাস্টম আলার্ট মাসেজ 
+
+function showAlert(message, duration=2000) {
+  const alertBox = document.getElementById("custom-alert");
+  alertBox.textContent = message;    // Alert message set
+  alertBox.style.display = "block";  // Show alert
+
+  // Automatically hide after duration
+  setTimeout(() => {
+    alertBox.style.display = "none";
+  }, duration);
+}
+//কাস্টম কনফার্ম মাসেজ 
+
+function showConfirm(message, onOk) {
+  const confirmBox = document.getElementById("custom-confirm");
+  const msg = document.getElementById("confirm-msg");
+  const okBtn = document.getElementById("confirm-ok");
+  const cancelBtn = document.getElementById("confirm-cancel");
+
+  msg.textContent = message;
+
+  // Dark mode detect
+  if(document.body.classList.contains("dark")) {
+    confirmBox.style.background = "#2a2a2a";  // dark background
+    confirmBox.style.color = "#fff";          // light text
+    okBtn.style.background = "#e53935";
+    okBtn.style.color = "#fff";
+    cancelBtn.style.background = "#444";
+    cancelBtn.style.color = "#fff";
+  } else {
+    confirmBox.style.background = "white";
+    confirmBox.style.color = "black";
+    okBtn.style.background = "#e53935";
+    okBtn.style.color = "white";
+    cancelBtn.style.background = "#ddd";
+    cancelBtn.style.color = "black";
+  }
+
+  confirmBox.style.display = "block";
+
+  // Remove previous listeners
+  okBtn.onclick = () => {
+    confirmBox.style.display = "none";
+    onOk();
+  };
+  cancelBtn.onclick = () => {
+    confirmBox.style.display = "none";
+  };
+}
+
+
+
+
 function addItem(){
-  if(!itemName.value.trim()) return alert("নাম দিন");
+  if(!itemName.value.trim()) return showAlert("নাম দিন");
   items.push({
     name:itemName.value,
     qty:itemQty.value,
@@ -374,18 +480,31 @@ function moveItem(i,dir){
   render();
 }
 
-function editRow(i,btn){
-  const row=btn.closest(".list-row");
-  const inputs=row.querySelectorAll("input");
-  if(btn.innerText==="✏️"){
-    inputs.forEach(x=>x.disabled=false);
-    btn.innerText="✅";
-  }else{
-    items[i]={
-      name:inputs[0].value,
-      qty:inputs[1].value,
-      price:Number(inputs[2].value)
+function editRow(i, btn) {
+  const row = btn.closest(".list-row");
+  const inputs = row.querySelectorAll("input");
+  const icon = btn.querySelector("i");
+
+  const isEditing = btn.dataset.editing === "true";
+
+  if (!isEditing) {
+    // Enable editing
+    inputs.forEach(input => input.disabled = false);
+    btn.dataset.editing = "true";
+    icon.classList.remove("fa-pen-to-square");
+    icon.classList.add("fa-check");
+  } else {
+    // Save changes
+    items[i] = {
+      name: inputs[0].value.trim(),
+      qty: inputs[1].value.trim(), // optional: convert to number if needed
+      price: Number(inputs[2].value) || 0
     };
+    btn.dataset.editing = "false";
+    icon.classList.remove("fa-check");
+    icon.classList.add("fa-pen-to-square");
+    inputs.forEach(input => input.disabled = true);
+
     render();
   }
 }
@@ -475,12 +594,12 @@ function sendWhatsApp(){
 }
 
 
-function clearAll(){
-  if(confirm("সব মুছবেন?")){
-    items=[];
+function clearAll() {
+  showConfirm("সব মুছবেন?", () => {
+    items = [];
     localStorage.removeItem("bazar_v8");
     render();
-  }
+  });
 }
 
 const list=document.getElementById("list");
