@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Bazar List</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+<!-- 🔥 Font Awesome Offline CSS -->
+<link rel="stylesheet" href="assets/fontawesome/css/all.min.css">
 
 <style>
   :root{
@@ -127,6 +130,88 @@ input{
   margin:16px 0;
 }
 
+
+/* ===== Action Buttons Icons ===== */
+.actions{
+  display:flex;
+  gap:6px;
+}
+
+.actions button{
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:6px;
+}
+
+.actions i{
+  font-size:18px;
+  color:#444; /* ☀️ Day mode */
+}
+
+/* 🌙 Dark mode → icons white */
+body.dark .actions i{
+  color:#ffffff;
+}
+
+/* Hover effect (both mode) */
+.actions button:hover i{
+  color:#e53935;
+}
+
+body.dark .actions button:hover i{
+  color:#facc15; /* yellow hover in dark */
+}
+
+
+.add-btn i{
+  margin-right:6px;
+}
+
+.save{background:#2563eb;}
+.wa{background:#22c55e;}
+.clear{background:#dc2626;}
+
+/* Dark Mode Toggle Button */
+.dark-btn{
+  padding:8px 14px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+
+  /* ☀️ Day (Light mode) gradient */
+  background:linear-gradient(135deg, #1e3a8a, #020617);
+
+  transition:all .2s ease;
+}
+
+/* 🌙 Night (Dark mode) gradient */
+body.dark .dark-btn{
+  background:linear-gradient(135deg, #fbbf24, #f97316);
+}
+
+/* icon spacing */
+.dark-btn i{
+  margin-right:6px;
+}
+
+/* press effect */
+.dark-btn:active{
+  transform:translateY(2px);
+  box-shadow:0 3px 0 rgba(0,0,0,.3);
+}
+
+
+
+
+
+
+
 /* ===== Mobile ===== */
 @media(max-width:600px){
 
@@ -174,7 +259,9 @@ input{
 
 <h2>🛒 বাজার লিস্ট</h2>
 
-<button onclick="toggleDark()">🌙 Dark Mode</button>
+<button onclick="toggleDark()" class="dark-btn">
+  <i id="themeIcon" class="fa-solid fa-moon"></i> Dark Mode
+</button>
 
 <!-- Add Item -->
 <div class="add-row">
@@ -183,7 +270,9 @@ input{
   <input id="itemPrice" type="number" placeholder="দাম (৳)">
 </div>
 
-<button class="add-btn" onclick="addItem()">➕ Add Item</button>
+<button class="add-btn" onclick="addItem()">
+  <i class="fa-solid fa-plus"></i> Add Item
+</button>
 
 <div class="list-header">
   <div>নং</div>
@@ -197,9 +286,17 @@ input{
 
 <div class="total">মোট: <span id="total">0</span> টাকা</div>
 
-<button class="save" onclick="saveTxt()">💾 Save TXT</button>
-<button class="wa" onclick="sendWhatsApp()">📤 WhatsApp</button>
-<button class="clear" onclick="clearAll()">🗑️ Clear</button>
+<button class="save" onclick="saveTxt()">
+  <i class="fa-solid fa-floppy-disk"></i> Save TXT
+</button>
+
+<button class="wa" onclick="sendWhatsApp()">
+  <i class="fa-brands fa-whatsapp"></i> WhatsApp
+</button>
+
+<button class="clear" onclick="clearAll()">
+  <i class="fa-solid fa-trash"></i> Clear
+</button>
 
 </div>
 
@@ -246,11 +343,22 @@ function render(){
       </div>
 
       <div class="actions">
-        <button class="move" onclick="moveItem(${i},-1)">🔺</button>
-        <button class="move" onclick="moveItem(${i},1)">🔻</button>
-        <button class="edit" onclick="editRow(${i},this)">✏️</button>
-        <button class="del" onclick="deleteItem(${i})">✖️</button>
-      </div>
+  <button class="move" onclick="moveItem(${i},-1)">
+    <i class="fa-solid fa-chevron-up"></i>
+  </button>
+
+  <button class="move" onclick="moveItem(${i},1)">
+    <i class="fa-solid fa-chevron-down"></i>
+  </button>
+
+  <button class="edit" onclick="editRow(${i},this)">
+    <i class="fa-solid fa-pen-to-square"></i>
+  </button>
+
+  <button class="del" onclick="deleteItem(${i})">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
     `;
     list.appendChild(row);
   });
@@ -289,8 +397,15 @@ function deleteItem(i){
 
 function toggleDark(){
   document.body.classList.toggle("dark");
-  localStorage.setItem("dark_v8",
-    document.body.classList.contains("dark"));
+
+  const icon = document.getElementById("themeIcon");
+  const isDark = document.body.classList.contains("dark");
+
+  icon.className = isDark
+    ? "fa-solid fa-sun"
+    : "fa-solid fa-moon";
+
+  localStorage.setItem("dark_v8", isDark);
 }
 
 
